@@ -1,26 +1,37 @@
-var MongoClient = require('mongodb').MongoClient
+var express = require('express'),
+    app = express(),
+    engines = require('consolidate'),
+    MongoClient = require('mongodb').MongoClient,
+    assert = require('assert');
 
-var url = 'mongodb://localhost:27017/videos';
+app.engine('html', engines.nunjucks);
+app.set('view engine', 'html');
+app.set('views', __dirname + '/views');
 
-MongoClient.connect(url, function(err, db) {
+MongoClient.connect('mongodb://localhost:27017/videos', function(err, db) {
 
-    // assert.equal(null, err);
-    console.log("Successfully connected to server");
+    assert.equal(null, err);
+    console.log("Successfully connected to MongoDB.");
 
-    // Find some documents in our collection
-    db.collection('movies').find({}).toArray(function(err, docs) {
+    app.get('/', function(req, res){
 
-        // Print the documents returned
-        docs.forEach(function(doc) {
-            console.log(doc.title);
+        db.collection('movies').find({}).toArray(function(err, docs) {
+            res.render('movies', { 'movies': docs } );
         });
 
-        // Close the DB
-        db.close();
     });
 
-    // Declare success
-    console.log("Called find()");
+    app.use(function(req, res){
+        res.sendStatus(404);
+    });
+    
+    var server = app.listen(3000, function() {
+        var port = server.address().port;
+        console.log('Express server listening on port %s.', port);
+    });
+
 });
+
+
 
 
